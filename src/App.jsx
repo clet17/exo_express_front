@@ -2,20 +2,17 @@ import './App.css'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-
 function App() {
 
   const [users, setUsers] = useState(null)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [addUserError, setAddUserError] = useState(null);
-  const [addUserSuccess, setAddUserSuccess] = useState(null);
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [telephone, setTelephone] = useState('')
   const [address, setAddress] = useState('')
-  const [hobbies, setHobbies] = useState("")
-
+  const [hobbies, setHobbies] = useState([])
+  const [currentHobby, setCurrentHobby] = useState('')
 
   const fetchApi = async () => {
     try{
@@ -25,32 +22,33 @@ function App() {
     }
     catch(err){
       console.log(err)
-      setError("Récuprétation des utilisateurs impossible");
+      setError("Récupération des utilisateurs impossible");
       setLoading(false);
     }
   }
 
   const handleNewUser = async (e) => {
     e.preventDefault()
-    const hobbyArray = hobbies.split(",").map(hobby => hobby.trim());
-    try{
-      const newUser = await axios.post('http://localhost:8000/api/users', {firstName, lastName, telephone, address, hobbies: hobbyArray})
+    try {
+      const newUser = await axios.post('http://localhost:8000/api/users', {firstName, lastName, telephone, address, hobbies})
       fetchApi()
-      setAddUserError(null);
-      setAddUserSuccess("Utilisateur ajouté !")
     }
     catch(err){
       console.log(err)
-      setAddUserError("Impossible d'ajouter l'utilisateur. Veuillez réessayer.");
-      setAddUserSuccess(null);
     }
-    
+  }
+
+  const handleAddHobby = () => {
+    e.preventDefault()
+    if(currentHobby.trim() !== '') {
+      setHobbies([...hobbies, currentHobby.trim()])
+      setCurrentHobby('')
+    }
   }
 
   useEffect(() => {
     fetchApi()
   }, [])
-
 
   return (
     <>
@@ -81,23 +79,40 @@ function App() {
         </div>
       ))}
 
-      {addUserError && <p style={{ color: 'red' }}>{addUserError}</p>}
-      {addUserSuccess && <p style={{ color: 'green' }}>{addUserSuccess}</p>}
-
       <form onSubmit={handleNewUser} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: '20px auto' }}>
         <label htmlFor="">Prenom</label>
-        <input type="text" onChange={(e) => setFirstName(e.target.value) }/>
+        <input type="text" onChange={(e) => setFirstName(e.target.value)}  />
         <label htmlFor="">Nom</label>
-        <input type="text" onChange={(e) => setLastName(e.target.value) }/>
+        <input type="text" onChange={(e) => setLastName(e.target.value)}  />
         <label htmlFor="">Télephone</label>
-        <input type="number" onChange={(e) => setTelephone(e.target.value) }/>
-        <label htmlFor="">Adress</label>
-        <input type="text" onChange={(e) => setAddress(e.target.value) }/>
-        <label htmlFor="">Hobbies(séparez les différents hobbies par des virgules)</label>
-        <input type="text" onChange={(e) => setHobbies(e.target.value) }/>
+        <input type="number" onChange={(e) => setTelephone(e.target.value)}  />
+        <label htmlFor="">Adresse</label>
+        <input type="text" onChange={(e) => setAddress(e.target.value)}  />
+        <label htmlFor="">Hobby</label>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input 
+            type="text" 
+            value={currentHobby} 
+            onChange={(e) => setCurrentHobby(e.target.value)} 
+
+          />
+          <button 
+            type="button" 
+            onClick={handleAddHobby} 
+            style={{ padding: '8px', fontSize: '16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', cursor: 'pointer' }}
+          >
+            Ajouter Hobby
+          </button>
+        </div>
+
+        <div>
+          {hobbies.length > 0 && (
+            <p>Hobbies ajoutés : {hobbies.join(', ')}</p>
+          )}
+        </div>
+
         <input type="submit" value="Ajouter l'utilisateur" style={{ padding: '10px', fontSize: '16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', cursor: 'pointer' }} />
       </form>
-
     </>
   )
 }
